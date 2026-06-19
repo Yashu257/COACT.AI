@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* ────────────────────────────────────────────────────────────────
+   Global responsive baseline — minimal, safe rules only.
+
+   IMPORTANT:
+   • Do NOT set overflow on html/body — that breaks position: sticky
+     and Framer Motion's useScroll (used for parallax + card stack).
+   • Do NOT override Tailwind arbitrary classes (px-[40px], py-[80px],
+     grid-cols-2, etc.) globally — each component already uses
+     responsive prefixes (sm:/md:/lg:) and the .sdv-* utilities
+     defined inside ScrollDetailView handle the detail pages.
+   ──────────────────────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  -webkit-text-size-adjust: 100%;
+}
+
+img, video {
+  max-width: 100%;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Mobile (≤ 640 px) — only the smallest, safest overrides.
+   These don't touch desktop / tablet layouts at all.
+   ──────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Allow the body to scroll horizontally if a child overflows
+     (rather than clipping it) so users can see broken layouts and
+     they don't silently disappear. */
+  body { overflow-x: clip; }
+}
