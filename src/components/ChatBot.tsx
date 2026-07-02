@@ -162,6 +162,7 @@ export default function ChatBot() {
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -174,6 +175,28 @@ export default function ChatBot() {
       (enquiryStep === "name" || enquiryStep === "email" || enquiryStep === "message");
     if (active) {
       const t = setTimeout(() => inputRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [mode, enquiryStep]);
+
+  // When chat opens, move keyboard focus to the first chip button so the
+  // user can Tab/Enter through options immediately.
+  useEffect(() => {
+    if (open) {
+      const t = setTimeout(() => {
+        const first = chatRef.current?.querySelector<HTMLButtonElement>('button[type="button"]');
+        first?.focus();
+      }, 350);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  // When the input box disappears (e.g. topic step after email), focus the
+  // messages container so Tab navigates forward to the visible chip buttons.
+  useEffect(() => {
+    if (mode === "enquiry" && enquiryStep === "topic") {
+      // 850ms = pushBot delay (700ms) + buffer for chips to render
+      const t = setTimeout(() => chatRef.current?.focus(), 850);
       return () => clearTimeout(t);
     }
   }, [mode, enquiryStep]);
@@ -364,7 +387,7 @@ export default function ChatBot() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-[14px] py-[16px] flex flex-col gap-[10px]">
+            <div ref={chatRef} tabIndex={-1} className="flex-1 overflow-y-auto px-[14px] py-[16px] flex flex-col gap-[10px] outline-none">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
                   <div
