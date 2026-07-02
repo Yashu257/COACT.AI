@@ -32,7 +32,9 @@ export default function LandingIntro() {
     const onWheel = (e: WheelEvent) => { if (e.deltaY > 0) dismiss(); };
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      // Don't intercept keypresses on interactive elements — buttons and links
+      // must be able to activate via Enter/Space without the intro eating the event.
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "BUTTON" || tag === "A") return;
       if ([" ", "ArrowDown", "PageDown", "Enter"].includes(e.key)) {
         e.preventDefault();
         dismiss();

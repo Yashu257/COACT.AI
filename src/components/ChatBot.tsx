@@ -46,7 +46,7 @@ const FAQ = [
   {
     q: "How do I contact COACT AI?",
     keywords: ["how to contact", "how to reach", "contact you", "reach you", "get in touch", "phone number", "your number", "call you", "email you", "whatsapp", "linkedin", "office address", "office location", "contact coact", "reach coact"],
-    a: "You can reach us directly through:\n📞 +91 73148 55655\n💼 LinkedIn below\n\nOur team is happy to help!",
+    a: "You can reach our team directly — tap the details below:",
     showContact: true,
   },
   {
@@ -161,10 +161,22 @@ export default function ChatBot() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
+
+  // Cross-browser reliable focus: autoFocus doesn't fire inside Framer Motion
+  // exit/enter animations in Safari, so imperatively focus via ref instead.
+  useEffect(() => {
+    const active = mode === "enquiry" &&
+      (enquiryStep === "name" || enquiryStep === "email" || enquiryStep === "message");
+    if (active) {
+      const t = setTimeout(() => inputRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [mode, enquiryStep]);
 
   const pushBot = (
     text: string,
@@ -254,7 +266,7 @@ export default function ChatBot() {
         setEnquiryStep("done");
         setMode("home");
         pushBot(
-          `Thank you! We've received your enquiry.\n\nTo speak with our team directly, reach us here:`,
+          `Thanks ${enquiry.name || "there"}! To speak with our team directly, reach us here:`,
           ["Ask a question", "New enquiry"],
           { showContact: true }
         );
@@ -292,7 +304,9 @@ export default function ChatBot() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 22 }}
             onClick={() => setOpen(true)}
-            className="flex items-center gap-[10px] rounded-full px-[20px] h-[52px] font-[650] text-[14px] text-[#050505] shadow-[0_8px_32px_rgba(124,255,79,0.45)] hover:shadow-[0_8px_40px_rgba(124,255,79,0.65)] transition-shadow"
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(true); } }}
+            tabIndex={0}
+            className="flex items-center gap-[10px] rounded-full px-[20px] h-[52px] font-[650] text-[14px] text-[#050505] shadow-[0_8px_32px_rgba(124,255,79,0.45)] hover:shadow-[0_8px_40px_rgba(124,255,79,0.65)] focus:outline-none focus:ring-2 focus:ring-[#7CFF4F] focus:ring-offset-2 focus:ring-offset-black transition-shadow"
             style={{ backgroundColor: "#7CFF4F" }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -340,7 +354,10 @@ export default function ChatBot() {
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="flex h-[30px] w-[30px] items-center justify-center rounded-full text-white/40 hover:text-white hover:bg-white/[0.08] transition-all text-[18px]"
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(false); } }}
+                tabIndex={0}
+                aria-label="Close chat"
+                className="flex h-[36px] w-[36px] items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/[0.1] focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-[20px]"
               >
                 ×
               </button>
@@ -368,8 +385,10 @@ export default function ChatBot() {
                       {msg.chips.map((chip) => (
                         <button
                           key={chip}
+                          type="button"
                           onClick={() => onChip(chip)}
-                          className="rounded-full border border-white/[0.18] px-[12px] h-[28px] text-[11px] font-[600] text-white/75 hover:bg-white/[0.1] hover:text-white hover:border-white/[0.35] transition-all"
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onChip(chip); } }}
+                          className="rounded-full border border-white/[0.18] px-[12px] h-[28px] text-[11px] font-[600] text-white/75 hover:bg-white/[0.1] hover:text-white hover:border-white/[0.35] focus:outline-none focus:ring-1 focus:ring-[#7CFF4F]/60 transition-all"
                         >
                           {chip}
                         </button>
@@ -412,10 +431,10 @@ export default function ChatBot() {
                   style={{ backgroundColor: "#161616" }}
                 >
                   <input
+                    ref={inputRef}
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    autoFocus
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey && input.trim()) {
                         e.preventDefault();
